@@ -1,4 +1,4 @@
-use be_email_news_letter::run;
+use news_letter::run;
 use std::net::TcpListener;
 
 #[tokio::main]
