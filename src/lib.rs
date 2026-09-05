@@ -6,7 +6,7 @@ async fn health_check() -> HttpResponse {
 
 pub fn run() -> Result<Server, std::io::Error> {
     let server = HttpServer::new(|| App::new().route("/health", web::get().to(health_check)))
-        .bind("127.0.0.1:8000")?
+        .bind("127.0.0.1:8081")?
         .run();
     Ok(server)
 }
