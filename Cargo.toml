@@ -1,8 +1,17 @@
 [package]
 name = "be-email-news-letter"
+authors = ["Millen Mark Aquino"]
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "be-email-news-letter"
+path = "src/main.rs"
+
 [dependencies]
 actix-web = "4.15.0"
+reqwest = "0.13.4"
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
