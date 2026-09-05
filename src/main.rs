@@ -14,8 +14,8 @@ async fn main() -> Result<(), std::io::Error> {
     HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(greet))
-            .route("/{name}", web::get().to(greet))
             .route("/health", web::get().to(health_check))
+            .route("/{name}", web::get().to(greet))
     })
     .bind("127.0.0.1:8080")?
     .run()
