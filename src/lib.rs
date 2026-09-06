@@ -5,9 +5,17 @@ async fn health_check() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
+async fn subscribe() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
+
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
-    let server = HttpServer::new(|| App::new().route("/health", web::get().to(health_check)))
-        .listen(listener)?
-        .run();
+    let server = HttpServer::new(|| {
+        App::new()
+            .route("/health", web::get().to(health_check))
+            .route("/subscribe", web::post().to(subscribe))
+    })
+    .listen(listener)?
+    .run();
     Ok(server)
 }
