@@ -1,0 +1,7 @@
+application_port: 8080
+database:
+    host: "172.26.123.205"
+    port: 5433
+    username: "postgres"
+    password: "password"
+    database_name: "newsletter"
