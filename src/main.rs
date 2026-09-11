@@ -1,5 +1,5 @@
 use news_letter::configuration::get_configuration;
-use news_letter::run;
+use news_letter::startup::run;
 use std::net::TcpListener;
 
 #[tokio::main]
