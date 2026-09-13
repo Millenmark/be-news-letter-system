@@ -1,18 +1,35 @@
 use news_letter::configuration::get_configuration;
-use sqlx::{Connection, PgConnection};
+use news_letter::startup::run;
+use sqlx::PgPool;
 use std::net::TcpListener;
 
-fn spawn_app() -> String {
+pub struct TestApp {
+    pub address: String,
+    pub db_pool: PgPool,
+}
+
+async fn spawn_app() -> String {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port.");
     let port = listener.local_addr().unwrap().port();
-    let server = news_letter::startup::run(listener).expect("Failed to bind address.");
+    let address = format!("http://localhost:{}", port);
+
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    let connection_pool = PgPool::connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to database.");
+
+    let server = run(listener, connection_pool.clone()).expect("Failed to bind address.");
     let _ = tokio::spawn(server);
-    format!("http://localhost:{}", port)
+
+    TestApp {
+        address,
+        db_pool: connection_pool,
+    }
 }
 
 #[tokio::test]
 async fn health_check_works() {
-    let address = spawn_app();
+    let address = spawn_app().await;
     let client = reqwest::Client::new();
 
     let response = client
@@ -28,7 +45,7 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
-    let app_address = spawn_app();
+    let app_address = spawn_app().await;
     let configuration = get_configuration().expect("Failed to read configuration");
     let connection_string = configuration.database.connection_string();
 
@@ -62,7 +79,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_returns_a_400_when_data_is_missing() {
     // Arrange
-    let app_address = spawn_app();
+    let app_address = spawn_app().await;
     let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
