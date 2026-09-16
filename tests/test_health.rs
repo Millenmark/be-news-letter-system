@@ -16,7 +16,7 @@ async fn spawn_app() -> TestApp {
     let configuration = get_configuration().expect("Failed to read configuration.");
     let connection_pool = PgPool::connect(&configuration.database.connection_string())
         .await
-        .expect("Failed to connect to database.");
+        .expect("Failed to connect to database..");
 
     let server = run(listener, connection_pool.clone()).expect("Failed to bind address.");
     let _ = tokio::spawn(server);
