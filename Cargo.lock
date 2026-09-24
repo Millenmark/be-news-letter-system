@@ -1525,6 +1525,7 @@ dependencies = [
  "actix-web",
  "chrono",
  "config",
+ "dotenvy",
  "reqwest",
  "serde",
  "sqlx",
