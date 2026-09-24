@@ -19,6 +19,11 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
             "configuration.yaml",
             config::FileFormat::Yaml,
         ))
+        .add_source(
+            config::Environment::with_prefix("APP")
+                .prefix_separator("_")
+                .separator("__"),
+        )
         .build()?;
 
     settings.try_deserialize::<Settings>()
@@ -27,7 +32,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 impl DatabaseSettings {
     pub fn connection_string(&self) -> String {
         format!(
-            "postgres://{}:{}@{}:{}/{}",
+            "postgres://{}:{}@{}:{}/{}?sslmode=require",
             self.username, self.password, self.host, self.port, self.database_name
         )
     }
