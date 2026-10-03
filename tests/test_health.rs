@@ -1,7 +1,6 @@
 use news_letter::configuration::{DatabaseSettings, get_configuration};
 use news_letter::startup::run;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::cmp::max;
 use std::net::TcpListener;
 use uuid::Uuid;
 
@@ -41,7 +40,10 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to connect to neonpostgres.");
 
     connection
-        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .execute(sqlx::AssertSqlSafe(format!(
+            r#"CREATE DATABASE "{}";"#,
+            config.database_name
+        )))
         .await
         .expect("Failed to create a database.");
 
