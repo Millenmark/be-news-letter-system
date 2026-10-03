@@ -1,6 +1,7 @@
-use news_letter::configuration::get_configuration;
+use news_letter::configuration::{DatabaseSettings, get_configuration};
 use news_letter::startup::run;
-use sqlx::PgPool;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
+use std::cmp::max;
 use std::net::TcpListener;
 use uuid::Uuid;
 
@@ -18,9 +19,7 @@ async fn spawn_app() -> TestApp {
     let mut configuration = get_configuration().expect("Failed to read configuration.");
     configuration.database.database_name = Uuid::new_v4().to_string();
 
-    let connection_pool = PgPool::connect(&configuration.database.connection_string())
-        .await
-        .expect("Failed to connect to database..");
+    let connection_pool = configure_database(&configuration.database).await;
 
     let server = run(listener, connection_pool.clone()).expect("Failed to bind address.");
     let _ = tokio::spawn(server);
@@ -29,6 +28,32 @@ async fn spawn_app() -> TestApp {
         address,
         db_pool: connection_pool,
     }
+}
+
+pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
+    let maintenance_settings = DatabaseSettings {
+        database_name: "neonpostgres".to_string(),
+        ..config.clone()
+    };
+
+    let mut connection = PgConnection::connect(&maintenance_settings.connection_string())
+        .await
+        .expect("Failed to connect to neonpostgres.");
+
+    connection
+        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .await
+        .expect("Failed to create a database.");
+
+    let connection_pool = PgPool::connect(&config.connection_string())
+        .await
+        .expect("Failed to connect to database.");
+    slqx::migrate!("./migrations")
+        .run(&connection_pool)
+        .await
+        .expect("Failed to run migrations.");
+
+    connection_pool
 }
 
 #[tokio::test]
